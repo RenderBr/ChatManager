@@ -33,7 +33,7 @@ namespace ChatManager
 
 		public static Config Read()
 		{
-			string configPath = Path.Combine(TShock.SavePath, "CMConfig.json");
+			string configPath = Path.Combine(TShock.SavePath, "ChatManager.json");
 			if (!File.Exists(configPath))
 			{
 				File.WriteAllText(configPath, JsonConvert.SerializeObject(Default(), Formatting.Indented));

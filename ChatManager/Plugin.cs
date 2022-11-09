@@ -16,8 +16,6 @@ namespace ChatManager
     {
         private static ProfanityDictionary _dict;
 
-        private static ProfanityFilter.ProfanityFilter _filter;
-
         private static DateTime[] ChatCooldown = new DateTime[256];
 
         private static Config Config = Config.Read();
@@ -96,7 +94,7 @@ namespace ChatManager
                 for (int i = 0; i < iUserName.Length; i++)
                 {
                     // inappropriate name trigger
-                    if (_filter.ContainsProfanity(iUserName[i]))
+                    if (_dict.BannedWords.Contains(iUserName[i]))
                     {
                         Config.DisconnectReasons.TryGetValue("InappNameReason", out string value);
                         if (Config.BanIfInappropriateUsername == true)
@@ -140,7 +138,17 @@ namespace ChatManager
                 args.TShockFormattedText = args.TShockFormattedText.Substring(0, raw) + args.RawText.AddColorTags();
                 return;
             }
-            args.TShockFormattedText = args.TShockFormattedText.Substring(0, raw) + _filter.CensorString(args.RawText).AddColorTags();
+
+            foreach (string word in _dict.BannedWords)
+            {
+                if (args.RawText.Contains(word))
+                {
+                    args.RawText = args.RawText.Replace(word, "$#!@");
+                    Console.WriteLine(word + " " + args.RawText);
+
+                }
+            }
+            args.TShockFormattedText = args.TShockFormattedText.Substring(0, raw) + args.RawText;
         }
 
         private void ProfanityManager(CommandArgs args)
@@ -195,7 +203,7 @@ namespace ChatManager
 
                         string badWord = string.Join(" ", args.Parameters.Skip(1));
 
-                        bool success = _dict.BannedWords.Remove(badWord) | _filter.RemoveProfanity(badWord);
+                        bool success = _dict.BannedWords.Remove(badWord);
                         _dict.Write();
 
                         if (success)
@@ -230,7 +238,6 @@ namespace ChatManager
         private bool AddNewProfanity(string args)
         {
             bool added = _dict.BannedWords.Add(args);
-            _filter.AddProfanity(args);
             _dict.Write();
 
             return added;
@@ -253,7 +260,6 @@ namespace ChatManager
         {
             Config = Config.Read();
             _dict = ProfanityDictionary.Read();
-            _filter = new ProfanityFilter.ProfanityFilter(_dict.BannedWords.ToArray());
         }
     }
 }
